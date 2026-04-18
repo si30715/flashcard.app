@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Flashcard App</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka&family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
+
+<style>
+body {
+  font-family: 'Fredoka','M PLUS Rounded 1c';
+  padding: 20px;
+  max-width: 500px;
+  margin: auto;
+}
+
+h1, h2 {
+  text-align: center;
+  font-weight: 800;
+  font-size: 100px;
+  display: flex;
+}
+
+.back-btn{
+  position: fixed;
+  top: 30px;
+  left: 30px;
+}
+
+.review-btn{
+  display: flex;
+  right: 30px;
+  top: 30px;
+  font-size: 45px;
+  color: white;
+  border: none;
+  background: black;
+  padding: 10px;
+  border-radius: 10px;
+
+}
+
+button{
+  font-family: 'Fredoka', 'M PLUS Rounded 1c';
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  font-size: 60px;
+}
+
+
+button:not(.correct-btn,.wrong-btn,.review-btn){
+  font-family: 'Fredoka','M PLUS Rounded 1c';
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 50px;
+}
+
+input {
+  padding: 8px;
+  margin: 5px;
+  width: 50%;
+  border-radius: 10px;
+  height: 40px;
+  font-size: 40px;
+
+}
+
+.deck {
+  padding: 15px;
+  margin: 10px 0;
+  background: #f2f2f2;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-item {
+  padding: 10px;
+  margin: 5px 0;
+  background: #e3e3e3;
+  border-radius: 8px;
+  font-size: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#card {
+  margin: 50px auto;
+  width: 90%;
+  height: 150px;
+  background: #f2f2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 40px;
+  cursor: pointer;
+}
+.study-card {
+  width: 90%;
+  height: 180px;
+  margin: 50px auto;
+  perspective: 1000px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 40px;
+  margin-top: 20px;
+  display: flex;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  display: flex;
+}
+
+.study-card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #f2f2f2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  backface-visibility: hidden;
+  text-align: center;
+  padding: 10px;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  background: #ffe0e0;
+}
+
+.wrong-btn{
+   background: #f53b3e;
+   color: white;
+}
+
+.correct-btn{
+   background: #3b5df5;
+   color: white;
+}
+.wrong-card {
+  width: 90%;
+  height: 150px;
+  margin: 20px auto;
+  perspective: 1000px;
+  font-size: 50px;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.wrong-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.wrong-card.flipped .wrong-inner {
+  transform: rotateY(180deg);
+}
+
+.wrong-front, .wrong-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #f2f2f2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  backface-visibility: hidden;
+}
+
+.wrong-back {
+  transform: rotateY(180deg);
+  background: #ffe0e0;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<!-- 🏠 ホーム -->
+<div id="homePage">
+  <h1>My Flashcards</h1>
+
+  <button onclick="showInput()">＋CREATE NEW</button>
+
+  <div id="inputArea" style="display:none;">
+    <input id="deckTitle" placeholder="Enter title">
+    <button onclick="addDeck()">CREATE</button>
+  </div>
+
+  <div id="deckList"></div>
+</div>
+
+<!-- 📚 単語帳ページ -->
+<div id="deckPage" style="display:none;">
+  <button class="back-btn" onclick="goHome()">BACK</button>
+  <h2 id="deckTitleDisplay"></h2>
+  
+  <button class="review-btn" onclick="startStudy()">REVIEW</button>
+  
+  <button onclick="showCardInput()">＋ADD CARD</button>
+
+  <div id="cardInput" style="display:none;">
+    <input id="question" placeholder="FRONT">
+    <input id="answer" placeholder="BACK">
+    <button onclick="addCard()">ADD</button>
+  </div>
+
+  <ul id="cardList"></ul>
+</div>
+
+
+<!-- 🧠 学習ページ -->
+<div id="studyPage" style="display:none;">
+  <button class="back-btn" onclick="backToDeck()">BACK</button>
+
+  <div id="card" class="study-card" onclick="flipCard()">
+  <div class="card-inner" id="cardInner">
+    
+    <div class="card-front" id="cardFront"></div>
+    
+    <div class="card-back" id="cardBack"></div>
+
+  </div>
+</div>
+
+<div id="finishMessage" style="display:none;">
+  <h2>All CORRECT!!!</h2>
+</div>
+
+ <div id="resultButtons" style="display:none;">
+  <button class="correct-btn" onclick="markCorrect()" >CORRECT</button>
+  <button class="wrong-btn" onclick="markWrong()">WRONG</button>
+</div>
+</div>
+
+<div id="reviewPage" style="display:none;">
+  <h2>WRONG</h2>
+
+  <ul id="wrongList"></ul>
+
+  <button class="back-btn" onclick="backToDeck()">BACK</button>
+  <button onclick="retryWrong()">TRY AGAIN</button>
+</div>
+
+
+
+
+<script>
+
+// データ
+let decks = [];
+let currentDeckIndex = null;
+
+// ページ切り替え
+function showPage(pageId) {
+  document.getElementById("homePage").style.display = "none";
+  document.getElementById("deckPage").style.display = "none";
+  document.getElementById("studyPage").style.display = "none"; 
+  document.getElementById("reviewPage").style.display = "none"; // ←追加
+
+  document.getElementById(pageId).style.display = "block";
+}
+
+// 入力表示
+function showInput() {
+  document.getElementById("inputArea").style.display = "block";
+}
+
+// デッキ追加
+function addDeck() {
+  const title = document.getElementById("deckTitle").value;
+  if (!title) return;
+
+  decks.push({
+    title: title,
+    cards: []
+  });
+
+  saveData();
+  renderDecks();
+
+  document.getElementById("deckTitle").value = "";
+}
+
+// デッキ表示
+function renderDecks() {
+  const list = document.getElementById("deckList");
+  list.innerHTML = "";
+
+  decks.forEach((deck, index) => {
+    const div = document.createElement("div");
+    div.className = "deck";
+    div.textContent = deck.title;
+
+    div.onclick = () => openDeck(index);
+
+    list.appendChild(div);
+  });
+}
+
+// デッキ開く
+function openDeck(index) {
+  currentDeckIndex = index;
+
+  document.getElementById("deckTitleDisplay").textContent =
+    decks[index].title;
+
+  renderCards();
+  showPage("deckPage");
+}
+
+// 戻る
+function goHome() {
+  showPage("homePage");
+}
+
+// カード入力表示
+function showCardInput() {
+  document.getElementById("cardInput").style.display = "block";
+}
+
+// カード追加
+function addCard() {
+  const q = document.getElementById("question").value;
+  const a = document.getElementById("answer").value;
+
+  if (!q || !a) return;
+
+  decks[currentDeckIndex].cards.push({
+    question: q,
+    answer: a,
+    starred: false
+  });
+
+  saveData();
+  renderCards();
+
+  document.getElementById("question").value = "";
+  document.getElementById("answer").value = "";
+}
+//エンターで追加
+function handleEnter(event) {
+  if (event.key === "Enter") {
+    if (event.target.id === "question") {
+      document.getElementById("answer").focus();
+    } else {
+      addCard();
+    }
+  }
+}
+// カード表示
+function renderCards() {
+  const list = document.getElementById("cardList");
+  list.innerHTML = "";
+
+  const cards = decks[currentDeckIndex].cards;
+
+  cards.forEach((card) => {
+    const li = document.createElement("li");
+    li.className = "card-item";
+    li.textContent = card.question + " - " + card.answer;
+
+    list.appendChild(li);
+  });
+}
+
+// 保存
+function saveData() {
+  localStorage.setItem("decks", JSON.stringify(decks));
+}
+
+// 読み込み
+function loadData() {
+  const data = localStorage.getItem("decks");
+  if (data) {
+    decks = JSON.parse(data);
+  }
+}
+
+function renderCards() {
+  const list = document.getElementById("cardList");
+  list.innerHTML = "";
+
+  const cards = decks[currentDeckIndex].cards;
+
+  cards.forEach((card, i) => {
+    const li = document.createElement("li");
+    li.className = "card-item";
+
+    li.innerHTML = `
+      ${card.question} - ${card.answer}
+      <button onclick="deleteCard(${i})">🗑</button>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+let currentCards = [];
+let currentIndex = 0;
+let showingAnswer = false;
+
+function startStudy() {
+  currentCards = [...decks[currentDeckIndex].cards];
+  currentCards.sort(() => Math.random() - 0.5);
+
+  currentIndex = 0;
+  showingAnswer = false;
+
+  wrongCards = [];
+  
+  document.getElementById("finishMessage").style.display = "none";
+  document.getElementById("card").style.display = "block";
+
+  isReviewingWrong = false;
+
+  showStudyCard();
+  showPage("studyPage");
+}
+
+function showStudyCard() {
+  const cardEl = document.getElementById("card");
+
+  cardEl.classList.remove("flipped");
+
+  setTimeout(() => {
+    const card = currentCards[currentIndex];
+
+    document.getElementById("cardFront").textContent = card.question;
+    document.getElementById("cardBack").textContent = card.answer;
+  }, 200);
+
+  showingAnswer = false;
+  document.getElementById("resultButtons").style.display = "none";
+}
+function flipCard() {
+  if (showingAnswer) return;
+
+  document.getElementById("card").classList.add("flipped");
+
+  showingAnswer = true;
+
+  document.getElementById("resultButtons").style.display = "block";
+}
+
+function markCorrect() {
+  if (isReviewingWrong) {
+    // 今のカードをwrongCardsから削除
+    wrongCards = wrongCards.filter(
+      card => card !== currentCards[currentIndex]
+    );
+  }
+
+  nextCard();
+}
+
+function markWrong() {
+  wrongCards.push(currentCards[currentIndex]);
+  nextCard();
+}
+
+function nextCard() {
+  currentIndex++;
+
+  if (currentIndex >= currentCards.length) {
+
+    if (wrongCards.length > 0) {
+      showWrongList();
+      return;
+    }
+
+    document.getElementById("resultButtons").style.display = "none";
+   
+    document.getElementById("finishMessage").style.display = "block";
+    document.getElementById("card").style.display = "none";
+
+    return;
+  }
+
+  showStudyCard();
+}
+
+function showWrongList() {
+  const list = document.getElementById("wrongList");
+  list.innerHTML = "";
+
+  wrongCards.forEach((card) => {
+    const div = document.createElement("div");
+    div.className = "wrong-card";
+
+    div.innerHTML = `
+      <div class="wrong-inner">
+        <div class="wrong-front">${card.question}</div>
+        <div class="wrong-back">${card.answer}</div>
+      </div>
+    `;
+
+    // タップで反転
+    div.onclick = () => {
+      div.classList.toggle("flipped");
+    };
+
+    list.appendChild(div);
+  });
+
+    document.getElementById("finishMessage").style.display = "none";
+    document.getElementById("card").style.display = "block";
+
+
+  showPage("reviewPage");
+}
+
+function retryWrong() {
+  currentCards = [...wrongCards];
+  currentIndex = 0;
+
+  wrongCards = []; 
+
+  showStudyCard();
+  showPage("studyPage");
+}
+
+
+
+
+let wrongCards = [];
+let isReviewingWrong = false;
+
+
+
+
+
+function backToDeck() {
+  showPage("deckPage");
+}
+
+function deleteCard(index) {
+  decks[currentDeckIndex].cards.splice(index, 1);
+  saveData();
+  renderCards();
+}
+function renderDecks() {
+  const list = document.getElementById("deckList");
+  list.innerHTML = "";
+
+  decks.forEach((deck, index) => {
+    const div = document.createElement("div");
+    div.className = "deck";
+
+    div.innerHTML = `
+      ${deck.title}
+      <button onclick="deleteDeck(${index}); event.stopPropagation();">🗑</button>
+    `;
+
+    div.onclick = () => openDeck(index);
+
+    list.appendChild(div);
+  });
+}
+
+function deleteDeck(index) {
+  decks.splice(index, 1);
+  saveData();
+  renderDecks();
+}
+
+let editingIndex = null;
+
+let lastTap = 0;
+
+function handleTap(index) {
+  const now = new Date().getTime();
+
+  if (now - lastTap < 300) {
+    // ダブルタップ
+    editingIndex = index;
+    renderCards();
+  }
+
+  lastTap = now;
+}
+
+function renderCards() {
+  const list = document.getElementById("cardList");
+  list.innerHTML = "";
+
+  const cards = decks[currentDeckIndex].cards;
+
+  cards.forEach((card, i) => {
+    const li = document.createElement("li");
+    li.className = "card-item";
+
+    if (editingIndex === i) {
+      // ✏️ 編集モード
+      li.innerHTML = `
+        <input id="editQ${i}" value="${card.question}">
+        <input id="editA${i}" value="${card.answer}">
+        <button onclick="saveEdit(${i})">Save</button>
+      `;
+    } else {
+      // 👀 通常モード
+      li.innerHTML = `
+        <span onclick="handleTap(${i})">
+          ${card.question} - ${card.answer}
+        </span>
+        <button onclick="deleteCard(${i})">🗑</button>
+      `;
+    }
+
+    list.appendChild(li);
+  });
+}
+
+function saveEdit(index) {
+  const newQ = document.getElementById(`editQ${index}`).value;
+  const newA = document.getElementById(`editA${index}`).value;
+
+  if (!newQ || !newA) return;
+
+  decks[currentDeckIndex].cards[index].question = newQ;
+  decks[currentDeckIndex].cards[index].answer = newA;
+
+  editingIndex = null;
+
+  saveData();
+  renderCards();
+}
+
+// 初期化
+loadData();
+renderDecks();
+
+</script>
+
+</body>
+</html>
